@@ -1,67 +1,88 @@
 #ifdef OLED_DRIVER_ENABLE
 #include QMK_KEYBOARD_H
 
+typedef struct {
+    uint16_t keycode;
+    keypos_t position;
+} last_key_t;
+last_key_t last_key = { 0xff, { 0xff, 0xff }, };
+
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
-  if (!is_master) {
-    return OLED_ROTATION_180;  // flips the display 180 degrees if offhand
-  }
-  return rotation;
-}
-
-#include "layer.h"
-#define L_BASE   0
-#define L_LOWER  (1 << _LOWER)
-#define L_RAISE  (1 << _RAISE)
-#define L_ADJUST (1 << _ADJUST)
-
-void oled_render_layer_state(void) {
-    oled_write_P(PSTR("Layer: "), false);
-    switch (layer_state) {
-        case L_BASE:
-            oled_write_ln_P(PSTR("Default"), false);
-            break;
-        case L_LOWER:
-            oled_write_ln_P(PSTR("Lower"), false);
-            break;
-        case L_RAISE:
-            oled_write_ln_P(PSTR("Raise"), false);
-            break;
-        case L_ADJUST:
-        case L_ADJUST|L_LOWER:
-        case L_ADJUST|L_RAISE:
-        case L_ADJUST|L_LOWER|L_RAISE:
-            oled_write_ln_P(PSTR("Adjust"), false);
-            break;
+    if (is_master) {
+        return OLED_ROTATION_270;
+    } else {
+        return OLED_ROTATION_180;  // flips the display 180 degrees if offhand
     }
 }
 
-
-char keylog_str[24] = {};
-
-const char code_to_name[60] = {
-    ' ', ' ', ' ', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
-    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
-    'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-    'R', 'E', 'B', 'T', '_', '-', '=', '[', ']', '\\',
-    '#', ';', '\'', '`', ',', '.', '/', ' ', ' ', ' '};
-
-void set_keylog(uint16_t keycode, keyrecord_t *record) {
-  char name = ' ';
-    if ((keycode >= QK_MOD_TAP && keycode <= QK_MOD_TAP_MAX) ||
-        (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX)) { keycode = keycode & 0xFF; }
-  if (keycode < 60) {
-    name = code_to_name[keycode];
-  }
-
-  // update keylog
-  snprintf(keylog_str, sizeof(keylog_str), "%dx%d, k%2d : %c",
-           record->event.key.row, record->event.key.col,
-           keycode, name);
+#include "layer.h"
+static const char layer_char(void) {
+    if (layer_state_is(_ADJUST)) {
+        return 0x12;
+    } else if (layer_state_is(_RAISE)) {
+        return 0x18;
+    } else if (layer_state_is(_LOWER)) {
+        return 0x19;
+    } else {
+        return ' ';
+    }
+}
+void oled_render_mod_and_layer(void) {
+    const uint8_t mods = get_mods();
+    oled_write_char(mods & MOD_MASK_GUI   ? 'G' : ' ', false);
+    oled_write_char(mods & MOD_MASK_CTRL  ? 'C' : ' ', false);
+    oled_write_char(mods & MOD_MASK_SHIFT ? 'S' : ' ', false);
+    oled_write_char(mods & MOD_MASK_ALT   ? 'A' : ' ', false);
+    oled_write_char(layer_char(), false);
+    // oled_advance_page(true);         // The cursor is already at the beggining of the line.
 }
 
-void oled_render_keylog(void) {
-    oled_write(keylog_str, false);
+void oled_render_key_position(void) {
+    if (last_key.position.row == 0xff) {
+       return;
+    }
+    char buf[4];
+    snprintf(buf, sizeof(buf), "%01xx%01x", last_key.position.row, last_key.position.col);
+    oled_write_ln(buf, false);
+}
+
+#define NN    { '\0', '\0' }
+#define LU(x) { (x), (x) ^ 0x20 }
+const unsigned char keycode_to_ascii_table[][2] PROGMEM = {
+    NN, NN, NN, NN,
+    LU('a'), LU('b'), LU('c'), LU('d'), LU('e'), LU('f'), LU('g'), LU('h'), LU('i'), LU('j'),
+    LU('k'), LU('l'), LU('m'), LU('n'), LU('o'), LU('p'), LU('q'), LU('r'), LU('s'), LU('t'),
+    LU('u'), LU('v'), LU('w'), LU('x'), LU('y'), LU('z'),
+    { '1', '!' }, { '2', '@' }, { '3', '#' }, { '4', '$' }, { '5', '%' },
+    { '6', '^' }, { '7', '&' }, { '8', '*' }, { '9', '(' }, { '0', ')' },
+    NN, NN, NN, NN,
+    { ' ', ' ' }, { '-', '_' }, { '=', '+' }, { '[', '{' }, { ']', '}' },
+    { '\\', '|' }, { '#', '~' }, { ';', ':' }, { '\'', '"' }, { '`', '~' },
+    { ',', '<' }, { '.', '>' }, { '/', '?' },
+};
+unsigned char keycode_to_ascii(uint16_t keycode) {
+    const int table_size = sizeof(keycode_to_ascii_table) / sizeof(keycode_to_ascii_table[0]);
+    if (keycode < table_size) {
+        return pgm_read_byte_near(&keycode_to_ascii_table[keycode][get_mods() & MOD_MASK_SHIFT ? 1 : 0]);
+    }
+    return '\0';
+}
+extern const unsigned char font[] PROGMEM;
+void oled_render_char(void) {
+    unsigned char c = keycode_to_ascii(last_key.keycode);
+    if (c == '\0') {
+        return;
+    }
+
+    const unsigned char *glyph = &font[(c - OLED_FONT_START) * OLED_FONT_WIDTH];
+    unsigned char buf[OLED_FONT_WIDTH - 1];
+    memcpy_P(buf, glyph, sizeof(buf));
+    for (int bit = 0; bit <= 7 ; bit++) {
+        for (int i = 0; i < sizeof(buf); i++) {
+            oled_write_char(bit_is_set(buf[i], bit) ? c : ' ', false);
+        }
+        // oled_advance_page(true);     // The cursor is already at the beggining of the line.
+    }
 }
 
 void render_bootmagic_status(bool status) {
@@ -89,13 +110,16 @@ void oled_render_logo(void) {
 }
 
 void oled_process_record_user(uint16_t keycode, keyrecord_t *record) {
-    set_keylog(keycode, record);
+    last_key.keycode = keycode;
+    last_key.position = record->event.key;
 }
 
 void oled_task_user(void) {
     if (is_master) {
-        oled_render_layer_state();
-        oled_render_keylog();
+        oled_render_mod_and_layer();
+        oled_render_key_position();
+        oled_advance_page(true);
+        oled_render_char();
     } else {
         oled_render_logo();
     }
