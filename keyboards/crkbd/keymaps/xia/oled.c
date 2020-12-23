@@ -5,7 +5,7 @@ typedef struct {
     uint16_t keycode;
     keypos_t position;
 } last_key_t;
-last_key_t last_key = { 0xff, { 0xff, 0xff }, };
+last_key_t last_key = { 0, { 0xff, 0xff }, };
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     if (is_master) {

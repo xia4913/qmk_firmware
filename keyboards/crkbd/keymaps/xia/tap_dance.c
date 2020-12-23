@@ -12,7 +12,7 @@ uint8_t cur_dance(qk_tap_dance_state_t *state) {
             return SINGLE_TAP;
         default:
             return TD_STATE_NONE;
-  }
+    }
 }
 
 void dance_safe_reset(qk_tap_dance_state_t *state, void *user_data) {
