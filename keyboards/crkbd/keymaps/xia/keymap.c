@@ -25,10 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ADJUST  MO(_ADJUST)
 
 #define RESET   TD(SAFE_RESET)  // override
+#define CSPC    TD(CTL_SPC)
 #define SENT    TD(SFT_ENT)
 #define ALTIME  TD(ALT_GRV)
-
-#define CSPC    LCTL(KC_SPC)
 
 #define T_CSPC  CTL_T(KC_SPC)
 #define T_SENT  SFT_T(KC_ENT)
@@ -46,7 +45,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                             T_GMHEN,   LOWER,  T_CSPC,     T_SENT,   RAISE,  ALTIME
                                         //`--------------------------'  `--------------------------'
     ),
-
     [_LOWER] = LAYOUT_split_3x6_3(
     //,-----------------------------------------------------.                    ,-----------------------------------------------------.
         _______, _______, _______, _______, XXXXXXX, XXXXXXX,                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
@@ -58,7 +56,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                             _______, _______, _______,    _______,  ADJUST, _______
                                         //`--------------------------'  `--------------------------'
     ),
-
     [_RAISE] = LAYOUT_split_3x6_3(
     //,-----------------------------------------------------.                    ,-----------------------------------------------------.
          KC_ESC, XXXXXXX, KC_PGUP, KC_PGDN,  XXXXXXX, XXXXXXX,                       KC_UP, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
@@ -70,7 +67,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                             _______,  ADJUST,    CSPC,       SENT, _______, _______
                                         //`--------------------------'  `--------------------------'
     ),
-  
     [_ADJUST] = LAYOUT_split_3x6_3(
     //,-----------------------------------------------------.                    ,-----------------------------------------------------.
           RESET, XXXXXXX, XXXXXXX, XXXXXXX, DM_PLY1, DM_REC1,                      DM_REC2, DM_PLY2, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
