@@ -18,7 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 #include "layer.h"
+#include "macro.h"
 #include "tap_dance.h"
+
+#ifdef OLED_DRIVER_ENABLE
+#include "oled.h"
+#endif // OLED_DRIVER_ENABLE
 
 #define LOWER    MO(_LOWER)
 #define RAISE    MO(_RAISE)
@@ -65,7 +70,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                      KC_LEFT,KC_RIGHT, XXXXXXX,  KC_DEL, XXXXXXX, XXXXXXX,
     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                            _______,  ADJUST, CTLxSPC,    SFTxENT, _______, _______
+                                            _______,  ADJUST,    SPC4,    _______, _______, _______
                                         //`--------------------------'  `--------------------------'
     ),
     [_ADJUST] = LAYOUT_split_3x6_3(
@@ -76,18 +81,21 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
         XXXXXXX, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, XXXXXXX,                      XXXXXXX, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, XXXXXXX,
     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                            _______, _______, _______,    _______, _______, _______
+                                            _______, _______, CTLxSPC,    SFTxENT, _______, _______
                                         //`--------------------------'  `--------------------------'
     )
 };
 
-#ifdef OLED_DRIVER_ENABLE
-#include "oled.h"
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+#ifdef OLED_DRIVER_ENABLE
     if (record->event.pressed) {
         oled_process_record_user(keycode, record);
     }
+#endif // OLED_DRIVER_ENABLE
+    switch (keycode) {
+    case MACRO_KEYCODES:
+        process_macro(keycode, record);
+        break;
+    }
     return true;
 }
-#endif // OLED_DRIVER_ENABLE
