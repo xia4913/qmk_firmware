@@ -3,9 +3,11 @@
 
 typedef struct {
     uint16_t keycode;
+    uint8_t  mods;
     keypos_t position;
+    bool     is_updated;
 } last_key_t;
-last_key_t last_key = { 0, { 0xff, 0xff }, };
+last_key_t last_key = { .is_updated = false, };
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     if (is_master) {
@@ -37,10 +39,11 @@ void oled_render_mod_and_layer(void) {
     // oled_advance_page(true);         // The cursor is already at the beggining of the line.
 }
 
-void oled_render_key_position(void) {
-    if (last_key.position.row == 0xff) {
-       return;
+void oled_render_last_key_position(void) {
+    if (!last_key.is_updated) {
+        return;
     }
+
     char buf[4];
     snprintf(buf, sizeof(buf), "%01xx%01x", last_key.position.row, last_key.position.col);
     oled_write_ln(buf, false);
@@ -68,8 +71,8 @@ unsigned char keycode_to_ascii(uint16_t keycode) {
     return '\0';
 }
 extern const unsigned char font[] PROGMEM;
-void oled_render_char(void) {
-    unsigned char c = keycode_to_ascii(last_key.keycode);
+void oled_render_last_char(void) {
+    const unsigned char c = keycode_to_ascii(last_key.keycode);
     if (c == '\0') {
         return;
     }
@@ -112,14 +115,19 @@ void oled_render_logo(void) {
 void oled_process_record_user(uint16_t keycode, keyrecord_t *record) {
     last_key.keycode = keycode;
     last_key.position = record->event.key;
+    last_key.is_updated = true;
 }
 
 void oled_task_user(void) {
     if (is_master) {
         oled_render_mod_and_layer();
-        oled_render_key_position();
+        if (!last_key.is_updated) {
+            return;
+        }
+        oled_render_last_key_position();
         oled_advance_page(true);
-        oled_render_char();
+        oled_render_last_char();
+        last_key.is_updated = false;
     } else {
         oled_render_logo();
     }
