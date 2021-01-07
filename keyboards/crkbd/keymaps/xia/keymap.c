@@ -20,18 +20,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "layer.h"
 #include "tap_dance.h"
 
-#define LOWER   MO(_LOWER)
-#define RAISE   MO(_RAISE)
-#define ADJUST  MO(_ADJUST)
+#define LOWER    MO(_LOWER)
+#define RAISE    MO(_RAISE)
+#define ADJUST   MO(_ADJUST)
 
-#define RESET   TD(SAFE_RESET)  // override
-#define CSPC    TD(CTL_SPC)
-#define SENT    TD(SFT_ENT)
-#define ALTIME  TD(ALT_GRV)
+#define RESET    TD(TD_SAFE_RESET)  // override
 
-#define T_CSPC  CTL_T(KC_SPC)
-#define T_SENT  SFT_T(KC_ENT)
-#define T_GMHEN GUI_T(KC_MHEN)
+#define CTL_SPC  TD(TD_CTL_OR_SPC)
+#define SFT_ENT  TD(TD_SFT_OR_ENT)
+#define GUI_MHEN GUI_T(KC_MHEN)
+
+#define CTLxSPC  TD(TD_CTL_AND_SPC)
+#define SFTxENT  TD(TD_SFT_AND_ENT)
+#define ALTxIME  TD(TD_ALT_AND_GRV)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT_split_3x6_3(
@@ -42,7 +43,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
         KC_BSLS, KC_SLSH, KC_SCLN, KC_QUOT,    KC_V,    KC_Q,                         KC_B,    KC_F,    KC_W,    KC_D,    KC_M,    KC_X,
     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                            T_GMHEN,   LOWER,  T_CSPC,     T_SENT,   RAISE,  ALTIME
+                                           GUI_MHEN,   LOWER, CTL_SPC,    SFT_ENT,   RAISE, ALTxIME
                                         //`--------------------------'  `--------------------------'
     ),
     [_LOWER] = LAYOUT_split_3x6_3(
@@ -64,7 +65,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                      KC_LEFT,KC_RIGHT, XXXXXXX,  KC_DEL, XXXXXXX, XXXXXXX,
     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                            _______,  ADJUST,    CSPC,       SENT, _______, _______
+                                            _______,  ADJUST, CTLxSPC,    SFTxENT, _______, _______
                                         //`--------------------------'  `--------------------------'
     ),
     [_ADJUST] = LAYOUT_split_3x6_3(

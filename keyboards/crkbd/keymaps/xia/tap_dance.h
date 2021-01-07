@@ -1,8 +1,10 @@
 #pragma once
 
 enum td_keycodes {
-    SAFE_RESET,
-    CTL_SPC,
-    SFT_ENT,
-    ALT_GRV,
+    TD_SAFE_RESET,
+    TD_CTL_OR_SPC,
+    TD_SFT_OR_ENT,
+    TD_CTL_AND_SPC,
+    TD_SFT_AND_ENT,
+    TD_ALT_AND_GRV,
 };
