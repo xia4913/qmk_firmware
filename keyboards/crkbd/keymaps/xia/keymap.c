@@ -18,12 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 #include "layer.h"
-#include "macro.h"
 #include "tap_dance.h"
 
 #ifdef OLED_DRIVER_ENABLE
-#include "oled.h"
-#endif // OLED_DRIVER_ENABLE
+#    include "oled.h"
+#endif  // OLED_DRIVER_ENABLE
 
 #define LOWER    MO(_LOWER)
 #define RAISE    MO(_RAISE)
@@ -38,6 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CTLxSPC  TD(TD_CTL_AND_SPC)
 #define SFTxENT  TD(TD_SFT_AND_ENT)
 #define ALTxIME  TD(TD_ALT_AND_GRV)
+
+#define SPC4     TD(TD_SPC4)
+#define BSPC4    TD(TD_BSPC4)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT_split_3x6_3(
@@ -70,7 +72,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                      KC_LEFT,KC_RIGHT, XXXXXXX,  KC_DEL, XXXXXXX, XXXXXXX,
     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                            _______,  ADJUST,    SPC4,    _______, _______, _______
+                                            _______,  ADJUST,    SPC4,      BSPC4, _______, _______
                                         //`--------------------------'  `--------------------------'
     ),
     [_ADJUST] = LAYOUT_split_3x6_3(
@@ -86,16 +88,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef OLED_DRIVER_ENABLE
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
         oled_process_record_user(keycode, record);
     }
-#endif // OLED_DRIVER_ENABLE
-    switch (keycode) {
-    case MACRO_KEYCODES:
-        process_macro(keycode, record);
-        break;
-    }
     return true;
 }
+#endif  // OLED_DRIVER_ENABLE

@@ -1,4 +1,5 @@
 #include QMK_KEYBOARD_H
+#include "layer.h"
 #include "tap_dance.h"
 
 void dance_safe_reset(qk_tap_dance_state_t *state, void *user_data) {
@@ -23,7 +24,7 @@ void dance_mods_or_key_on_each_tap(qk_tap_dance_state_t *state, void *user_data)
                 register_code(data->kc);
             }
         }
-   }
+    }
 }
 void dance_mods_or_key_finished(qk_tap_dance_state_t *state, void *user_data) {
     dance_mods_and_kc_t *data = (dance_mods_and_kc_t *)user_data;
@@ -74,6 +75,28 @@ void dance_mods_and_key_reset(qk_tap_dance_state_t *state, void *user_data) {
         .user_data = (void *)&((dance_mods_and_kc_t){ (mods), (kc) }), \
     }
 
+typedef struct {
+    uint16_t kc;
+    uint8_t  multiple;
+} dance_multiple_with_layer_t;
+
+void dance_multiple_with_layer_finished(qk_tap_dance_state_t *state, void *user_data) {
+    dance_multiple_with_layer_t *data = (dance_multiple_with_layer_t *)user_data;
+    uint8_t multiple = (state->interrupted || layer_state_is(_LOWER)) ? 1 : data->multiple;
+    for (int i = multiple * state->count; i > 0; i--) {
+        register_code(data->kc);
+    }
+}
+void dance_multiple_with_layer_reset(qk_tap_dance_state_t *state, void *user_data) {
+    dance_multiple_with_layer_t *data = (dance_multiple_with_layer_t *)user_data;
+    unregister_code(data->kc);
+}
+#define ACTION_TAP_DANCE_MULTI_WITH_LAYER(kc, multiple) \
+    { \
+        .fn = { NULL, dance_multiple_with_layer_finished, dance_multiple_with_layer_reset }, \
+        .user_data = (void *)&((dance_multiple_with_layer_t){ (kc), (multiple) }), \
+    }
+
 qk_tap_dance_action_t tap_dance_actions[] = {
     [TD_SAFE_RESET]  = ACTION_TAP_DANCE_FN(dance_safe_reset),
     [TD_CTL_OR_SPC]  = ACTION_TAP_DANCE_MODS_OR_KEY(KC_LCTL, KC_SPC),
@@ -81,4 +104,6 @@ qk_tap_dance_action_t tap_dance_actions[] = {
     [TD_CTL_AND_SPC] = ACTION_TAP_DANCE_MODS_AND_KEY(KC_LCTL, KC_SPC),
     [TD_SFT_AND_ENT] = ACTION_TAP_DANCE_MODS_AND_KEY(KC_LSFT, KC_ENT),
     [TD_ALT_AND_GRV] = ACTION_TAP_DANCE_MODS_AND_KEY(KC_LALT, KC_GRV),
+    [TD_SPC4]        = ACTION_TAP_DANCE_MULTI_WITH_LAYER(KC_SPC,  4),
+    [TD_BSPC4]       = ACTION_TAP_DANCE_MULTI_WITH_LAYER(KC_BSPC, 4),
 };

@@ -7,4 +7,6 @@ enum td_keycodes {
     TD_CTL_AND_SPC,
     TD_SFT_AND_ENT,
     TD_ALT_AND_GRV,
+    TD_SPC4,
+    TD_BSPC4,
 };
