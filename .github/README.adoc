@@ -1,0 +1,13 @@
+This repository is forked from https://github.com/qmk/qmk_firmware[qmk/qmk_firmware].
+
+https://github.com/xia4913/qmk_firmware/tree/add_crkbd_xia_keymap[add_crkbd_xia_keymap]
+is the working branch to add 
+https://github.com/xia4913/qmk_firmware/tree/add_crkbd_xia_keymap/keyboards/crkbd/keymaps/xia[my keymap] 
+to
+https://github.com/qmk/qmk_firmware/tree/master/keyboards/crkbd[Corne Keymord (CRKBD)].
+
+== * WARNING *
+
+To catch up the master branch of qmk/qmk_firmware, I use 'rebase' inseteaad of 'merge'.
+
+'push --borce' will be overwrite the history.
