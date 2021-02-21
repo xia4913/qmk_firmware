@@ -39,7 +39,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ALTxIME  TD(TD_ALT_AND_GRV)
 
 #define SPC4     TD(TD_SPC4)
-#define BSPC4    TD(TD_BSPC4)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT_split_3x6_3(
@@ -72,7 +71,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                      KC_LEFT,KC_RIGHT, XXXXXXX,  KC_DEL, XXXXXXX, XXXXXXX,
     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                            _______,  ADJUST,    SPC4,      BSPC4, _______, _______
+                                            _______,  ADJUST,    SPC4,    _______, _______, _______
                                         //`--------------------------'  `--------------------------'
     ),
     [_ADJUST] = LAYOUT_split_3x6_3(
