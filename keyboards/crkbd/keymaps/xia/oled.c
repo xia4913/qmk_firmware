@@ -1,6 +1,20 @@
 #ifdef OLED_DRIVER_ENABLE
 #    include QMK_KEYBOARD_H
 
+extern uint8_t oled_buffer[];
+extern uint8_t *oled_cursor;
+extern uint8_t oled_rotation_width;
+bool oled_is_cursor_at_bol(void) {
+    return (oled_cursor - &oled_buffer[0]) % oled_rotation_width == 0;
+}
+
+extern const unsigned char font[] PROGMEM;
+const unsigned char *glyph(unsigned char ascii) {
+    const unsigned int font_offset = (ascii - OLED_FONT_START) * OLED_FONT_WIDTH;
+    return &font[font_offset];
+}	
+
+
 typedef struct {
     uint16_t keycode;
     uint8_t  mods;
@@ -38,7 +52,9 @@ void oled_render_mod_and_layer(void) {
     oled_write_char(mods & MOD_MASK_SHIFT ? 'S' : ' ', false);
     oled_write_char(mods & MOD_MASK_ALT   ? 'A' : ' ', false);
     oled_write_char(layer_char(), false);
-    // oled_advance_page(true);         // The cursor is already at the beggining of the line.
+    if (!oled_is_cursor_at_bol()) {
+        oled_advance_page(true);
+    }
 }
 
 void oled_render_last_key_position(void) {
@@ -72,21 +88,18 @@ unsigned char keycode_to_ascii(uint16_t keycode) {
     }
     return '\0';
 }
-extern const unsigned char font[] PROGMEM;
 void oled_render_last_char(void) {
+    uint8_t char_width = MIN(OLED_FONT_WIDTH, oled_max_chars());
+    unsigned char buf[char_width];
     const unsigned char c = keycode_to_ascii(last_key.keycode);
-    if (c == '\0') {
-        return;
-    }
-
-    const unsigned char *glyph = &font[(c - OLED_FONT_START) * OLED_FONT_WIDTH];
-    unsigned char buf[OLED_FONT_WIDTH - 1];
-    memcpy_P(buf, glyph, sizeof(buf));
-    for (int bit = 0; bit <= 7; bit++) {
-        for (int i = 0; i < sizeof(buf); i++) {
-            oled_write_char(bit_is_set(buf[i], bit) ? c : ' ', false);
+    memcpy_P(buf, glyph(c), sizeof(buf));
+    for (uint8_t y = 0; y < CHAR_BIT; y++) {
+        for (uint8_t x = 0; x < char_width; x++) {
+            oled_write_char(bit_is_set(buf[x], y) ? c : ' ', false);
         }
-        // oled_advance_page(true);     // The cursor is already at the beggining of the line.
+        if (!oled_is_cursor_at_bol()) {
+            oled_advance_page(true);
+	}
     }
 }
 
