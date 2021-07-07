@@ -10,6 +10,43 @@ void dance_safe_reset(qk_tap_dance_state_t *state, void *user_data) {
 }
 
 typedef struct {
+    const char *str;
+    uint16_t   kc;
+    uint8_t    count;
+} dance_count_send_string_t;
+
+void dance_count_send_string_on_each_tap(qk_tap_dance_state_t *state, void *user_data) {
+    dance_count_send_string_t *data = (dance_count_send_string_t *)user_data;
+    if (state->count == data->count) {
+        send_string(data->str);
+        state->finished = true;
+    }
+}
+void dance_count_send_string_finished(qk_tap_dance_state_t *state, void *user_data) {
+    dance_count_send_string_t *data = (dance_count_send_string_t *)user_data;
+    if (state->count == data->count) {
+        send_string(data->str);
+    } else {
+        register_code(data->kc);
+    }
+}
+void dance_count_send_string_reset(qk_tap_dance_state_t *state, void *user_data) {
+    dance_count_send_string_t *data = (dance_count_send_string_t *)user_data;
+    if (state->count != data->count) {
+        unregister_code(data->kc);
+    }
+}
+#define ACTION_TAP_DANCE_COUNT_STRING(kc, str, count) \
+    { \
+        .fn = { \
+            dance_count_send_string_on_each_tap, \
+            dance_count_send_string_finished, \
+            dance_count_send_string_reset \
+        }, \
+        .user_data = (void *)&((dance_count_send_string_t){ (str), (kc), (count) }), \
+    }
+
+typedef struct {
     uint16_t kc;
     uint8_t  mods;
 } dance_mods_and_kc_t;
@@ -49,9 +86,13 @@ void dance_mods_or_key_reset(qk_tap_dance_state_t *state, void *user_data) {
     unregister_code(data->kc);
     unregister_mods(MOD_BIT(data->mods));
 }
-#define ACTION_TAP_DANCE_MODS_OR_KEY(mods, kc) \
+#define ACTION_TAP_DANCE_KEY_OR_MODS(kc, mods) \
     { \
-        .fn = { dance_mods_or_key_on_each_tap, dance_mods_or_key_finished, dance_mods_or_key_reset }, \
+        .fn = { \
+            dance_mods_or_key_on_each_tap, \
+            dance_mods_or_key_finished, \
+            dance_mods_or_key_reset \
+        }, \
         .user_data = (void *)&((dance_mods_and_kc_t){ (kc), (mods) }), \
     }
 
@@ -69,9 +110,13 @@ void dance_mods_and_key_reset(qk_tap_dance_state_t *state, void *user_data) {
     unregister_code(data->kc);
     unregister_mods(MOD_BIT(data->mods));
 }
-#define ACTION_TAP_DANCE_MODS_AND_KEY(mods, kc) \
+#define ACTION_TAP_DANCE_KEY_AND_MODS(kc, mods) \
     { \
-        .fn = { NULL, dance_mods_and_key_finished, dance_mods_and_key_reset }, \
+        .fn = { \
+            NULL, \
+            dance_mods_and_key_finished, \
+            dance_mods_and_key_reset \
+        }, \
         .user_data = (void *)&((dance_mods_and_kc_t){ (kc), (mods) }), \
     }
 
@@ -106,18 +151,23 @@ void dance_multiple_reset(qk_tap_dance_state_t *state, void *user_data) {
     unregister_code(data->kc);
     unregister_mods(MOD_BIT(data->mods));
 }
-#define ACTION_TAP_DANCE_MULTIPLE(mods, kc, multiple) \
+#define ACTION_TAP_DANCE_MULTIPLE(kc, mods, multiple) \
     { \
-        .fn = { dance_multiple_on_each_tap, dance_multiple_finished, dance_multiple_reset }, \
+        .fn = { \
+            dance_multiple_on_each_tap, \
+            dance_multiple_finished, \
+            dance_multiple_reset \
+        }, \
         .user_data = (void *)&((dance_multiple_t){ (kc), (mods), (multiple) }), \
     }
 
 qk_tap_dance_action_t tap_dance_actions[] = {
     [TD_SAFE_RESET]  = ACTION_TAP_DANCE_FN(dance_safe_reset),
-    [TD_ALT_AND_GRV] = ACTION_TAP_DANCE_MODS_AND_KEY(KC_LALT, KC_GRV),
-    [TD_SPC4]        = ACTION_TAP_DANCE_MULTIPLE(    KC_LCTL, KC_SPC, 4),
-    [TD_CTL_OR_SPC]  = ACTION_TAP_DANCE_MODS_OR_KEY( KC_LCTL, KC_SPC),
-    [TD_CTL_AND_SPC] = ACTION_TAP_DANCE_MODS_AND_KEY(KC_LCTL, KC_SPC),
-    [TD_SFT_OR_ENT]  = ACTION_TAP_DANCE_MODS_OR_KEY( KC_LSFT, KC_ENT),
-    [TD_SFT_AND_ENT] = ACTION_TAP_DANCE_MODS_AND_KEY(KC_LSFT, KC_ENT),
+    [TD_GRV_HOME]    = ACTION_TAP_DANCE_COUNT_STRING(KC_GRV, "~/",    2),
+    [TD_SPC4]        = ACTION_TAP_DANCE_MULTIPLE(    KC_SPC, KC_LCTL, 4),
+    [TD_ALT_AND_GRV] = ACTION_TAP_DANCE_KEY_AND_MODS(KC_GRV, KC_LALT),
+    [TD_CTL_OR_SPC]  = ACTION_TAP_DANCE_KEY_OR_MODS( KC_SPC, KC_LCTL),
+    [TD_CTL_AND_SPC] = ACTION_TAP_DANCE_KEY_AND_MODS(KC_SPC, KC_LCTL),
+    [TD_SFT_OR_ENT]  = ACTION_TAP_DANCE_KEY_OR_MODS( KC_ENT, KC_LSFT),
+    [TD_SFT_AND_ENT] = ACTION_TAP_DANCE_KEY_AND_MODS(KC_ENT, KC_LSFT),
 };
